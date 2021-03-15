@@ -40,12 +40,12 @@ impl fmt::Display for Color {
     }
 }
 
-pub fn rgb(r: u8, g: u8, b: u8) -> Color { Color { r, g, b } }
-pub fn black() -> Color { rgb(0, 0, 0) }
-pub fn white() -> Color { rgb(255, 255, 255) }
-pub fn red() -> Color { rgb(255, 0, 0) }
-pub fn green() -> Color { rgb(0, 255, 0) }
-pub fn blue() -> Color { rgb(0, 0, 255) }
+pub const fn rgb(r: u8, g: u8, b: u8) -> Color { Color { r, g, b } }
+pub const fn black() -> Color { rgb(0, 0, 0) }
+pub const fn white() -> Color { rgb(255, 255, 255) }
+pub const fn red() -> Color { rgb(255, 0, 0) }
+pub const fn green() -> Color { rgb(0, 255, 0) }
+pub const fn blue() -> Color { rgb(0, 0, 255) }
 
 /// `fill:{self}`
 #[derive(Copy, Clone, PartialEq)]
