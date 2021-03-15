@@ -1,5 +1,31 @@
 use std::fmt;
 
+pub trait Number {
+    fn to_f32(&self) -> f32;
+}
+
+macro_rules! impl_to_number {
+    ($t:ty) => {
+        impl Number for $t {
+            fn to_f32(&self) -> f32 {
+                *self as f32
+            }
+        }
+    };
+}
+
+impl_to_number!(u8);
+impl_to_number!(u16);
+impl_to_number!(u32);
+impl_to_number!(u64);
+impl_to_number!(usize);
+impl_to_number!(i8);
+impl_to_number!(i16);
+impl_to_number!(i32);
+impl_to_number!(i64);
+impl_to_number!(isize);
+impl_to_number!(f32);
+
 /// `rgb({r},{g},{b})`
 #[derive(Copy, Clone, PartialEq)]
 pub struct Color {
@@ -107,9 +133,9 @@ pub struct Rectangle {
     pub border_radius: f32,
 }
 
-pub fn rectangle(x: f32, y: f32, w: f32, h: f32) -> Rectangle {
+pub fn rectangle<T: Number, U: Number>(x: T, y: T, w: U, h: U) -> Rectangle {
     Rectangle {
-        x, y, w, h,
+        x: x.to_f32(), y: y.to_f32(), w: w.to_f32(), h: h.to_f32(),
         style: Style::default(),
         border_radius: 0.0,
     }
@@ -154,12 +180,25 @@ impl Rectangle {
         self
     }
 
-    pub fn inflate(mut self, dx: f32, dy: f32) -> Self {
+    pub fn inflate<T: Number>(mut self, dx: T, dy: T) -> Self {
+        let dx = dx.to_f32();
+        let dy = dy.to_f32();
         self.x -= dx;
         self.y -= dy;
         self.w += 2.0 * dx;
         self.h += 2.0 * dy;
         self
+    }
+
+    /// Up, Down, Left, Right
+    pub fn sides(&self) -> [LineSegment; 4] {
+        let Rectangle { x, y, w, h, .. } = *self;
+        [
+            line_segment(x, y, x+w, y),
+            line_segment(x, y+h, x+w, y+h),
+            line_segment(x, y, x, y+h),
+            line_segment(x+w, y, x+w, y+h)
+        ]
     }
 }
 
@@ -316,16 +355,18 @@ pub struct LineSegment {
     pub y2: f32,
     pub color: Color,
     pub width: f32,
+    pub opacity: f32,
 }
 
 impl fmt::Display for LineSegment {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f,
-            r#"<path d="M {} {} L {} {}" style="stroke:{};stroke-width:{}"/>"#,
+            r#"<path d="M {} {} L {} {}" style="stroke:{};stroke-width:{};stroke-opacity:{}"/>"#,
             self.x1, self.y1,
             self.x2, self.y2,
             self.color,
             self.width,
+            self.opacity,
         )
     }
 }
@@ -335,6 +376,7 @@ pub fn line_segment(x1: f32, y1: f32, x2: f32, y2: f32) -> LineSegment {
         x1, y1, x2, y2,
         color: black(),
         width: 1.0,
+        opacity: 1.0,
     }
 }
 
@@ -349,11 +391,18 @@ impl LineSegment {
         self
     }
 
-    pub fn offset(mut self, dx: f32, dy: f32) -> Self {
+    pub fn offset<T: Number, U: Number>(mut self, dx: T, dy: U) -> Self {
+        let dx = dx.to_f32();
+        let dy = dy.to_f32();
         self.x1 += dx;
         self.y1 += dy;
         self.x2 += dx;
         self.y2 += dy;
+        self
+    }
+
+    pub fn opacity(mut self, opacity: f32) -> Self {
+        self.opacity = opacity;
         self
     }
 }
@@ -489,9 +538,9 @@ impl fmt::Display for Text {
     }
 }
 
-pub fn text<T: Into<String>>(x: f32, y: f32, txt: T) -> Text {
+pub fn text<T: Number, U: Into<String>>(x: T, y: T, txt: U) -> Text {
     Text {
-        x, y,
+        x: x.to_f32(), y: y.to_f32(),
         text: txt.into(),
         color: black(),
         align: Align::Left,
@@ -556,17 +605,17 @@ impl fmt::Display for Align {
 
 /// `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {y}">`
 #[derive(Copy, Clone, PartialEq)]
-pub struct BeginSvg {
-    pub w: f32,
-    pub h: f32,
+pub struct BeginSvg<T = f32> {
+    pub w: T,
+    pub h: T,
 }
 
-impl fmt::Display for BeginSvg {
+impl<T: Number> fmt::Display for BeginSvg<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f,
             r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {} {}">"#,
-            self.w,
-            self.h,
+            self.w.to_f32(),
+            self.h.to_f32(),
         )
     }
 }
