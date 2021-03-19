@@ -371,9 +371,9 @@ impl fmt::Display for LineSegment {
     }
 }
 
-pub fn line_segment(x1: f32, y1: f32, x2: f32, y2: f32) -> LineSegment {
+pub fn line_segment<T: Number, U: Number>(x1: T, y1: U, x2: T, y2: U) -> LineSegment {
     LineSegment {
-        x1, y1, x2, y2,
+        x1: x1.to_f32(), y1: y1.to_f32(), x2: x2.to_f32(), y2: y2.to_f32(),
         color: black(),
         width: 1.0,
         opacity: 1.0,
@@ -562,7 +562,7 @@ impl fmt::Display for Text {
     }
 }
 
-pub fn text<T: Number, U: Into<String>>(x: T, y: T, txt: U) -> Text {
+pub fn text<T: Number, U: Number, S: Into<String>>(x: T, y: U, txt: S) -> Text {
     Text {
         x: x.to_f32(), y: y.to_f32(),
         text: txt.into(),
@@ -629,15 +629,30 @@ impl fmt::Display for Align {
 
 /// `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {y}">`
 #[derive(Copy, Clone, PartialEq)]
-pub struct BeginSvg<T = f32> {
+pub struct BeginSvg<T = f32, U = f32> {
+    pub x: U,
+    pub y: U,
     pub w: T,
     pub h: T,
+}
+
+impl Default for BeginSvg {
+    fn default() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            w: 1.0,
+            h: 1.0,
+        }
+    }
 }
 
 impl<T: Number> fmt::Display for BeginSvg<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f,
-            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {} {}">"#,
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{} {} {} {}">"#,
+            self.x.to_f32(),
+            self.y.to_f32(),
             self.w.to_f32(),
             self.h.to_f32(),
         )
@@ -685,7 +700,7 @@ impl fmt::Display for Indentation {
 
 #[test]
 fn foo() {
-    println!("{}", BeginSvg { w: 800.0, h: 600.0 });
+    println!("{}", BeginSvg { w: 800.0, h: 600.0, .. });
     println!("    {}",
         rectangle(20.0, 50.0, 200.0, 100.0)
             .fill(red())
