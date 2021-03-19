@@ -405,6 +405,30 @@ impl LineSegment {
         self.opacity = opacity;
         self
     }
+
+    pub fn flip_to<T: Number, U: Number>(mut self, new_x: T, new_y: U) -> Self {
+        let new_x = new_x.to_f32();
+        let new_y = new_y.to_f32();
+        if new_x != 0.0 {
+            if new_x > self.x1 {
+                self.x1 = self.x2;
+                self.x2 = new_x;
+            } else if new_x < self.x1 {
+                self.x2 = self.x1;
+                self.x1 = new_x;
+            }
+        }
+        if new_y != 0.0 {
+            if new_y > self.y1 {
+                self.y1 = self.y2;
+                self.y2 = new_y;
+            } else if new_y < self.y1 {
+                self.y2 = self.y1;
+                self.y1 = new_y;
+            }
+        }
+        self
+    }
 }
 
 /// `<path d="..." />`
