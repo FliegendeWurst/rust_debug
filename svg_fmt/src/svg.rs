@@ -26,6 +26,23 @@ impl_to_number!(i64);
 impl_to_number!(isize);
 impl_to_number!(f32);
 
+pub trait IntoString {
+    fn into(self) -> String;
+}
+
+impl<T: Into<String>> IntoString for T {
+    fn into(self) -> String {
+        self.into()
+    }
+}
+
+#[rustversion::before(1.46)]
+impl IntoString for char {
+    fn into(self) -> String {
+        self.to_string()
+    }
+}
+
 /// `rgb({r},{g},{b})`
 #[derive(Copy, Clone, PartialEq)]
 pub struct Color {
@@ -562,7 +579,7 @@ impl fmt::Display for Text {
     }
 }
 
-pub fn text<T: Number, U: Number, S: Into<String>>(x: T, y: U, txt: S) -> Text {
+pub fn text<T: Number, U: Number, S: IntoString>(x: T, y: U, txt: S) -> Text {
     Text {
         x: x.to_f32(), y: y.to_f32(),
         text: txt.into(),
@@ -700,7 +717,7 @@ impl fmt::Display for Indentation {
 
 #[test]
 fn foo() {
-    println!("{}", BeginSvg { w: 800.0, h: 600.0, .. });
+    println!("{}", BeginSvg { w: 800.0, h: 600.0, ..Default::default() });
     println!("    {}",
         rectangle(20.0, 50.0, 200.0, 100.0)
             .fill(red())
